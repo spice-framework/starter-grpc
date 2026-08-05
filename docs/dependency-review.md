@@ -1,6 +1,7 @@
 # Dependency review: grpc-go
 
-- Decision: approved for the isolated `starter/grpc` package.
+- Decision: approved for the isolated
+  `github.com/spice-framework/starter-grpc` module.
 - Version: `google.golang.org/grpc` v1.82.1.
 - Upstream: <https://github.com/grpc/grpc-go>.
 - License: Apache-2.0; retained with the mechanically vendored source.
@@ -27,10 +28,15 @@
   Applications explicitly own listeners, registrations, generated clients,
   credentials, and service policy. There is no package-presence activation,
   global registry, or hidden module download.
-- Verification: race-enabled loopback tests exercise a registered RPC, standard
-  health, client/server observations, graceful cleanup, forced cancellation,
-  TLS defaults, invalid registrations, and panic redaction. Real cross-process
-  mTLS acceptance remains broader integration work.
+- Verification: race-enabled local TCP acceptance uses a locally issued CA,
+  verified server TLS, and required client certificates. It exercises RPCs,
+  standard health, client/server observations, concurrency, message limits,
+  graceful cleanup, forced cancellation, invalid registrations, and diagnostic
+  redaction without external network access.
+- Spice compatibility: the module selects the provisional minimum. The strict
+  repository compatibility manifest and isolated CI matrix verify distinct
+  minimum and current revisions with exact MVS selection; the starter manifest
+  independently requires the exact Spice starter API.
 
 Primary references:
 
