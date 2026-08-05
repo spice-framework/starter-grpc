@@ -1,2 +1,4 @@
 /.tmp/
 /coverage.out
+/dist/
+/dist-rehearsal/

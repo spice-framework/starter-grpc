@@ -18,3 +18,7 @@ dependency. The repository-owned compatibility verifier resolves each boundary
 through an isolated alternate modfile, requires exact MVS selection, runs vet
 and shuffled race tests for every product package with `GOPROXY=off`, and hashes
 the repository before and after to prove source, module, and vendor immutability.
+
+Release artifacts are produced only from an exact tagged commit under the
+contract in [`releasing.md`](releasing.md). A compromised or missing signing
+secret fails a production release; it never falls back to unsigned output.
