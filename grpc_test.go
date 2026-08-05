@@ -491,7 +491,7 @@ func TestServerRejectsInvalidUse(t *testing.T) {
 func TestManifest(t *testing.T) {
 	t.Parallel()
 	spec := Manifest().Spec()
-	if spec.ID != "github.com/StevenBuglione/spice/starter/grpc" ||
+	if spec.ID != "github.com/spice-framework/spice/starter/grpc" ||
 		!slices.Equal(spec.Capabilities, []string{
 			"rpc.grpc.client",
 			"rpc.grpc.server",

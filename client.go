@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/StevenBuglione/spice/lifecycle"
+	"github.com/spice-framework/spice/lifecycle"
 	nativegrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
