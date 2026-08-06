@@ -31,15 +31,18 @@ not rely on an earlier verifier to detect a stale dependency graph.
 ## Production ceremony
 
 Production releases call the organization-owned reusable workflow at an
-immutable commit. Before any release tag is created, a release owner must:
+immutable commit. The reviewed public Ed25519 trust anchor is configured at
+`security/release/ed25519-public.pem`. Its SHA-256 fingerprint over the DER
+SubjectPublicKeyInfo bytes is
+`c080fc77db36f71feda3b744aa59325b73064b1c890cd69362c6b70521ca82c0`.
+Before any release tag is created, a release owner must:
 
-1. generate a user-owned Ed25519 private key dedicated to this repository;
-2. review and commit its public key as
-   `security/release/ed25519-public.pem`;
-3. store the private key as `SPICE_LIBRARY_RELEASE_SIGNING_KEY` only in the
-   protected `release-signing` environment; and
-4. configure protected `release-signing` and `release-publish` environments
-   with the required human reviewers.
+1. confirm the matching user-owned private key is dedicated to this repository;
+2. store it as `SPICE_LIBRARY_RELEASE_SIGNING_KEY` only in the protected
+   `release-signing` environment;
+3. configure protected `release-signing` and `release-publish` environments
+   with the required human reviewers; and
+4. verify the committed public anchor still has the reviewed fingerprint.
 
 Do not create or push a release tag until all four controls exist. The caller
 maps no secrets. The reusable workflow obtains the signing key only from its
@@ -118,5 +121,7 @@ openssl pkeyutl -verify -pubin -inkey checksums.txt.pem \
 
 Consumers must authenticate `checksums.txt.sig` against the reviewed
 `security/release/ed25519-public.pem` from the exact tagged source, not against a
-public key supplied only beside release assets. Until that trust anchor and the
-protected environments are configured, this repository must not publish a tag.
+public key supplied only beside release assets. The anchor is configured, but
+it does not assert that a matching private signing secret, protected
+environments, a tag, or a release exists. Until the remaining production
+controls are configured, this repository must not publish a tag.
