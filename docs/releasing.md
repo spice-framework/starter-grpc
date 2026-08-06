@@ -34,22 +34,24 @@ Production releases call the organization-owned reusable workflow at an
 immutable commit. The reviewed public Ed25519 trust anchor is configured at
 `security/release/ed25519-public.pem`. Its SHA-256 fingerprint over the DER
 SubjectPublicKeyInfo bytes is
-`c080fc77db36f71feda3b744aa59325b73064b1c890cd69362c6b70521ca82c0`.
+`4bc50198c65b1e4f542d16cda46ca0736c716bebff63ececce1ea53daf285621`.
 Before any release tag is created, a release owner must:
 
 1. confirm the matching user-owned private key is dedicated to this repository;
-2. store it as `SPICE_LIBRARY_RELEASE_SIGNING_KEY` only in the protected
-   `release-signing` environment;
+2. store it only as the repository Actions secret
+   `SPICE_LIBRARY_RELEASE_SIGNING_KEY`;
 3. configure protected `release-signing` and `release-publish` environments
-   with the required human reviewers; and
-4. verify the committed public anchor still has the reviewed fingerprint.
+   with the required human reviewers while keeping the environments secret-free;
+4. map only the named repository secret into the reusable workflow; and
+5. verify the committed public anchor still has the reviewed fingerprint.
 
-Do not create or push a release tag until all four controls exist. The caller
-maps no secrets. The reusable workflow obtains the signing key only from its
-`release-signing` job, validates the exact tag and public trust anchor, signs
-with the centrally pinned tool, independently verifies with the separately
-pinned verifier, and publishes only through `release-publish`. A missing key,
-anchor, environment, review, or verification result fails closed.
+Do not create or push a release tag until all five controls exist. The caller
+maps exactly `SPICE_LIBRARY_RELEASE_SIGNING_KEY` and never inherits unrelated
+secrets. The reusable workflow validates the exact tag and public trust anchor,
+exposes the key only to the approved `release-signing` job, signs with the
+centrally pinned tool, independently verifies with the separately pinned
+verifier, and publishes only through `release-publish`. A missing key, anchor,
+environment, review, or verification result fails closed.
 
 ## Unsigned rehearsal
 
@@ -122,6 +124,6 @@ openssl pkeyutl -verify -pubin -inkey checksums.txt.pem \
 Consumers must authenticate `checksums.txt.sig` against the reviewed
 `security/release/ed25519-public.pem` from the exact tagged source, not against a
 public key supplied only beside release assets. The anchor is configured, but
-it does not assert that a matching private signing secret, protected
-environments, a tag, or a release exists. Until the remaining production
-controls are configured, this repository must not publish a tag.
+it and the private repository secret do not assert that a tag or release
+exists. This repository must not publish a tag without the protected approvals
+and every remaining production control.

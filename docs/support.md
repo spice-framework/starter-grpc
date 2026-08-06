@@ -12,7 +12,7 @@
 | Service model | Caller-owned generated registrations, listeners, clients, contexts, and cleanup |
 | Release signer | `github.com/spice-framework/development/cmd/spice-dev` at `v0.0.0-20260806132124-4c308d1b9fda` |
 | Independent verifier | `github.com/spice-framework/toolchain/cmd/spice-library-release-verify` at `v0.0.0-20260806133530-71211498297c` |
-| Public trust anchor | [`security/release/ed25519-public.pem`](../security/release/ed25519-public.pem), SHA-256 `c080fc77db36f71feda3b744aa59325b73064b1c890cd69362c6b70521ca82c0` |
+| Public trust anchor | [`security/release/ed25519-public.pem`](../security/release/ed25519-public.pem), SHA-256 `4bc50198c65b1e4f542d16cda46ca0736c716bebff63ececce1ea53daf285621` |
 
 [`spice-compatibility.json`](../spice-compatibility.json) is the sole preview
 compatibility boundary. The committed module selects its provisional minimum;
@@ -31,7 +31,8 @@ production workflow. Windows and Linux CI still compare unsigned central and
 retained outputs under vendor-only offline resolution; the retained command is
 only a parity oracle. The reviewed public trust anchor is configured at
 `security/release/ed25519-public.pem`; its fingerprint is the SHA-256 digest of
-the DER SubjectPublicKeyInfo bytes. Production remains disabled until the
-matching per-repository `SPICE_LIBRARY_RELEASE_SIGNING_KEY` and protected
-`release-signing` and `release-publish` environments are configured. The
-public anchor does not establish that a tag or published release exists.
+the DER SubjectPublicKeyInfo bytes. The matching private key is stored only as
+the repository Actions secret `SPICE_LIBRARY_RELEASE_SIGNING_KEY` and passed
+through the exact one-name caller mapping. The protected `release-signing`
+environment remains the human approval gate and contains no key. These
+configured controls do not establish that a tag or published release exists.
