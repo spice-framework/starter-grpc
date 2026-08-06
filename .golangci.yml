@@ -111,11 +111,6 @@ linters:
         text: 'use of `os\.Exit`'
         linters:
           - forbidigo
-      - path: "cmd[/\\\\]starter-grpc-release[/\\\\]main\\.go$"
-        text: 'use of `os\.Exit`'
-        linters:
-          - forbidigo
-
 formatters:
   enable:
     - gofumpt

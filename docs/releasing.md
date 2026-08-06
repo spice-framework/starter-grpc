@@ -1,10 +1,9 @@
 # Release contract
 
 starter-grpc releases are ordinary Go module tags plus a small, independently
-verifiable artifact set. The repository owns the release contract while the
-organization-owned reusable workflow performs the common build, signing,
-independent verification, and publication phases. No mutable workspace snapshot
-or network-resolved package list participates in artifact construction.
+verifiable artifact set. The repository owns the complete build. No external
+release build service, mutable workspace snapshot, or network-resolved package
+list participates in artifact construction.
 
 For `v1.2.3`, the release builder produces:
 
@@ -28,88 +27,53 @@ absolute checkout path. Construction fails when committed module selection,
 checksums, and vendored versions or replacements disagree; the builder does
 not rely on an earlier verifier to detect a stale dependency graph.
 
-## Production ceremony
+## Protected production ceremony
 
-Production releases call the organization-owned reusable workflow at an
-immutable commit. The reviewed public Ed25519 trust anchor is configured at
+The pinned central workflow validates the exact canonical tag and commit,
+repeats `make verify-release` without credentials, renders deterministic
+artifacts, signs them, and passes them to a separate verifier before publishing.
+No repository-local release builder exists. The immutable central renderer is
+the sole production implementation.
+
+This repository's reviewed public Ed25519 trust anchor is committed at
 `security/release/ed25519-public.pem`. Its SHA-256 fingerprint over the DER
 SubjectPublicKeyInfo bytes is
 `4bc50198c65b1e4f542d16cda46ca0736c716bebff63ececce1ea53daf285621`.
-Before any release tag is created, a release owner must:
+Store only the matching private key as the repository Actions secret
+`SPICE_LIBRARY_RELEASE_SIGNING_KEY`. Configure protected `release-signing` and
+`release-publish` environments for the signing approval and write-capable final
+job. Both environments should require the repository's designated reviewers.
 
-1. confirm the matching user-owned private key is dedicated to this repository;
-2. store it only as the repository Actions secret
-   `SPICE_LIBRARY_RELEASE_SIGNING_KEY`;
-3. configure protected `release-signing` and `release-publish` environments
-   with the required human reviewers while keeping the environments secret-free;
-4. map only the named repository secret into the reusable workflow; and
-5. verify the committed public anchor still has the reviewed fingerprint.
+Do not create or push a release tag until the matching private signing secret
+and both protected environments are configured. Committing the public anchor
+does not assert that those controls, a tag, or a release exist. The caller
+forwards exactly one explicitly named signing secret; broad `secrets: inherit`
+forwarding is forbidden. The reusable workflow references that secret only in
+its protected `release-signing` job. Validation, planning, independent
+verification, and publishing cannot read it. The workflow fails closed on a
+missing key, an anchor mismatch, a moved tag, or independent verification
+failure.
 
-Do not create or push a release tag until all five controls exist. The caller
-maps exactly `SPICE_LIBRARY_RELEASE_SIGNING_KEY` and never inherits unrelated
-secrets. The reusable workflow validates the exact tag and public trust anchor,
-exposes the key only to the approved `release-signing` job, signs with the
-centrally pinned tool, independently verifies with the separately pinned
-verifier, and publishes only through `release-publish`. A missing key, anchor,
-environment, review, or verification result fails closed.
+## Unsigned deterministic rehearsal
 
-## Unsigned rehearsal
-
-An explicit rehearsal exercises the exact same source archive, SBOM, and
-checksum pipeline without requiring a clean checkout or matching tag:
-
-```text
-go run ./cmd/starter-grpc-release \
-  -rehearsal \
-  -version=v0.0.0-rehearsal \
-  -output=dist-rehearsal
-```
-
-Rehearsals are always unsigned and always archive `HEAD`, never working-tree
-contents. Passing a signing key together with `-rehearsal` is rejected.
-
-## Unsigned dual-builder rehearsal
-
-The root `go.mod` authorizes the exact central renderer through a standard Go
-`tool` directive. `make release-parity` runs that fully qualified tool and the
-retained repository builder twice each with `GOWORK=off`, `GOPROXY=off`,
-`GOTOOLCHAIN=local`, and `GOFLAGS=-mod=vendor`. The central tool first emits a
-read-only plan bound to the committed module and compatibility metadata, then
-renders only to caller-owned temporary directories.
-
-The central renderer and signer are the production implementation. The retained
-repository builder remains only an unsigned parity oracle during the migration:
+The library module authorizes an exact central renderer through its
+`go.mod` tool directive. `make release-rehearsal` asks that fully qualified tool
+for one read-only plan, then renders the same plan twice with `GOWORK=off`,
+`GOPROXY=off`, `GOTOOLCHAIN=local`, and `GOFLAGS=-mod=vendor`:
 
 ```text
-make release-parity
+make release-rehearsal
 ```
 
-Both rehearsals are unsigned, deterministic across two independent outputs,
-and archive the exact committed `HEAD` tree beneath the identical
-`starter-grpc_VERSION/` root. Parity requires byte-identical compressed source
-archives and also fully drains and decodes both streams. It bounds compressed
-and expanded data, validates canonical gzip metadata and CRC/trailer handling,
-rejects extra gzip members, raw trailing bytes, and bytes hidden after the TAR
-end markers, and compares every entry's path, order, type, mode, link, size,
-timestamp, PAX metadata, and content hash.
+Both renders are unsigned and always archive `HEAD`, never working-tree
+contents. Every artifact must be byte-identical, the checksum file must
+canonically authenticate its archive and SBOM, the SPDX document must carry
+the renderer/v1 provenance, and neither output may contain a signature or
+public key. The gate fails closed on an extra artifact, dependency drift,
+malformed checksum, provenance drift, or nondeterministic output.
 
-The SPDX documents must match exactly outside these builder-provenance fields:
-
-- document name (`Spice gRPC starter VERSION` retained and
-  `starter-grpc VERSION` centrally);
-- namespace identity, including the central `spdx/v1/` contract segment; and
-- creator organization/tool (`Spice Authors` and the retained command versus
-  `Spice Framework` and renderer/v1).
-
-Every package, external reference, relationship, creation time, and other
-decoded field must match. Each checksum file must independently and canonically
-verify its own archive and SBOM. Extra artifacts, signatures, malformed line
-endings or spacing, archive drift, and undocumented SBOM drift fail closed.
-
-`make verify-release` runs this dual-builder proof after the complete repository
-contract. The retained builder is not removed by this cutover and never receives
-production signing authority; removal requires a separate reviewed change after
-the central signed path has durable release evidence.
+`make verify-release` executes this deterministic rehearsal after the complete
+repository verification contract.
 
 ## Consumer verification
 
@@ -121,9 +85,8 @@ openssl pkeyutl -verify -pubin -inkey checksums.txt.pem \
   -rawin -in checksums.txt -sigfile checksums.txt.sig
 ```
 
-Consumers must authenticate `checksums.txt.sig` against the reviewed
-`security/release/ed25519-public.pem` from the exact tagged source, not against a
-public key supplied only beside release assets. The anchor is configured, but
-it and the private repository secret do not assert that a tag or release
-exists. This repository must not publish a tag without the protected approvals
-and every remaining production control.
+Consumers must authenticate the signature with the reviewed committed
+`security/release/ed25519-public.pem`, not an untrusted key downloaded beside
+the release. The central signer refuses a private key that does not match that
+anchor, and the independent verifier authenticates the complete artifact set
+before the protected publish job receives it.

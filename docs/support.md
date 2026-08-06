@@ -27,9 +27,9 @@ contract in [`releasing.md`](releasing.md). A compromised or missing signing
 secret fails a production release; it never falls back to unsigned output.
 
 The pinned central signer and independent verifier power the protected reusable
-production workflow. Windows and Linux CI still compare unsigned central and
-retained outputs under vendor-only offline resolution; the retained command is
-only a parity oracle. The reviewed public trust anchor is configured at
+production workflow. Windows and Linux CI render the same inert central plan
+twice under vendor-only offline resolution and require byte-identical unsigned
+artifacts. The reviewed public trust anchor is configured at
 `security/release/ed25519-public.pem`; its fingerprint is the SHA-256 digest of
 the DER SubjectPublicKeyInfo bytes. The matching private key is stored only as
 the repository Actions secret `SPICE_LIBRARY_RELEASE_SIGNING_KEY` and passed

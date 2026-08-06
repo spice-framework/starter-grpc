@@ -1,4 +1,4 @@
-.PHONY: acceptance check compatibility fmt release-parity verify verify-release
+.PHONY: acceptance check compatibility fmt release-rehearsal verify verify-release
 
 acceptance:
 	go test -race -shuffle=on -count=1 .
@@ -12,12 +12,12 @@ compatibility:
 fmt:
 	go run ./internal/qualitygate -mode=fmt
 
-release-parity: export GOWORK := off
-release-parity: export GOPROXY := off
-release-parity: export GOTOOLCHAIN := local
-release-parity: export GOFLAGS := -mod=vendor
-release-parity:
-	go run ./internal/qualitygate -mode=release-parity
+release-rehearsal: export GOWORK := off
+release-rehearsal: export GOPROXY := off
+release-rehearsal: export GOTOOLCHAIN := local
+release-rehearsal: export GOFLAGS := -mod=vendor
+release-rehearsal:
+	go run ./internal/qualitygate -mode=release-rehearsal
 
 verify:
 	go run ./internal/qualitygate -mode=verify
