@@ -25,6 +25,10 @@ Release artifacts are produced only from an exact tagged commit under the
 contract in [`releasing.md`](releasing.md). A compromised or missing signing
 secret fails a production release; it never falls back to unsigned output.
 
-The pinned central tool renders unsigned rehearsal candidates only. Windows
-and Linux CI compare them with the retained builder under vendor-only offline
-resolution; the retained command remains the signed production authority.
+The pinned central signer and independent verifier power the protected reusable
+production workflow. Windows and Linux CI still compare unsigned central and
+retained outputs under vendor-only offline resolution; the retained command is
+only a parity oracle. Production remains disabled until a reviewed
+`security/release/ed25519-public.pem`, the per-repository
+`SPICE_LIBRARY_RELEASE_SIGNING_KEY`, and protected `release-signing` and
+`release-publish` environments are configured.

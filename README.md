@@ -92,6 +92,6 @@ checksums, and an Ed25519 signature/public key without an external release
 build system. Production mode requires a clean checkout, exact tag, and
 protected signing key; an explicit unsigned rehearsal is available for local
 proof. See [`docs/releasing.md`](docs/releasing.md) for the artifact and trust
-contract. The retained repository builder and signed production workflow remain
-the release authority while the centrally rendered unsigned candidate is held
-to the dual-builder parity contract.
+contract. The protected central workflow is the release authority. The retained
+repository builder remains only an unsigned parity oracle and is held to the
+dual-builder contract during the migration.

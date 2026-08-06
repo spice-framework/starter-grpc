@@ -1,9 +1,10 @@
 # Release contract
 
 starter-grpc releases are ordinary Go module tags plus a small, independently
-verifiable artifact set. The repository owns the complete build. No external
-release build service, mutable workspace snapshot, or network-resolved package
-list participates in artifact construction.
+verifiable artifact set. The repository owns the release contract while the
+organization-owned reusable workflow performs the common build, signing,
+independent verification, and publication phases. No mutable workspace snapshot
+or network-resolved package list participates in artifact construction.
 
 For `v1.2.3`, the release builder produces:
 
@@ -29,21 +30,23 @@ not rely on an earlier verifier to detect a stale dependency graph.
 
 ## Production ceremony
 
-Production mode fails unless all of these conditions hold:
+Production releases call the organization-owned reusable workflow at an
+immutable commit. Before any release tag is created, a release owner must:
 
-1. `-version` is canonical, v-prefixed SemVer.
-2. the checkout is clean, including untracked files;
-3. the named tag resolves exactly to `HEAD`;
-4. an Ed25519 private key is supplied;
-5. any explicit source epoch equals the `HEAD` commit epoch; and
-6. the output directory does not already exist.
+1. generate a user-owned Ed25519 private key dedicated to this repository;
+2. review and commit its public key as
+   `security/release/ed25519-public.pem`;
+3. store the private key as `SPICE_LIBRARY_RELEASE_SIGNING_KEY` only in the
+   protected `release-signing` environment; and
+4. configure protected `release-signing` and `release-publish` environments
+   with the required human reviewers.
 
-The tag workflow runs `make verify-release`, materializes the protected
-`STARTER_GRPC_RELEASE_SIGNING_KEY` secret with owner-only permissions, invokes
-the repository command, removes the key even after failure, and publishes only
-the newly created `dist` files. The workflow never prints the key. Creating or
-rotating that repository secret and pushing a release tag are separate human
-release-authority actions; no development task should manufacture either.
+Do not create or push a release tag until all four controls exist. The caller
+maps no secrets. The reusable workflow obtains the signing key only from its
+`release-signing` job, validates the exact tag and public trust anchor, signs
+with the centrally pinned tool, independently verifies with the separately
+pinned verifier, and publishes only through `release-publish`. A missing key,
+anchor, environment, review, or verification result fails closed.
 
 ## Unsigned rehearsal
 
@@ -69,8 +72,8 @@ retained repository builder twice each with `GOWORK=off`, `GOPROXY=off`,
 read-only plan bound to the committed module and compatibility metadata, then
 renders only to caller-owned temporary directories.
 
-The central renderer is a migration candidate. The retained repository builder
-remains both the parity oracle and the production signer:
+The central renderer and signer are the production implementation. The retained
+repository builder remains only an unsigned parity oracle during the migration:
 
 ```text
 make release-parity
@@ -99,10 +102,9 @@ verify its own archive and SBOM. Extra artifacts, signatures, malformed line
 endings or spacing, archive drift, and undocumented SBOM drift fail closed.
 
 `make verify-release` runs this dual-builder proof after the complete repository
-contract. The production tag workflow deliberately continues to invoke
-`cmd/starter-grpc-release`, materialize the same protected signing secret, and
-publish the same five retained artifacts until signing authority is migrated in
-a separate review.
+contract. The retained builder is not removed by this cutover and never receives
+production signing authority; removal requires a separate reviewed change after
+the central signed path has durable release evidence.
 
 ## Consumer verification
 
@@ -114,10 +116,7 @@ openssl pkeyutl -verify -pubin -inkey checksums.txt.pem \
   -rawin -in checksums.txt -sigfile checksums.txt.sig
 ```
 
-Until a separately reviewed Ed25519 public-key fingerprint is pinned in this
-repository, GitHub's protected `spice-framework/starter-grpc` release channel
-and immutable tag are the authenticity anchor. A public key bundled beside its
-own signature proves only artifact-set consistency, not independent identity.
-Consumers requiring an independent anchor must pin and compare the reviewed
-fingerprint before trusting the signature. The project must not describe the
-bundled key alone as proof of publisher authenticity.
+Consumers must authenticate `checksums.txt.sig` against the reviewed
+`security/release/ed25519-public.pem` from the exact tagged source, not against a
+public key supplied only beside release assets. Until that trust anchor and the
+protected environments are configured, this repository must not publish a tag.

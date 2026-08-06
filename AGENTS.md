@@ -15,9 +15,9 @@ automatic module/tool download.
 Release-parity work must preserve the exact `spice-dev` tool version authorized
 by the root `go.mod`, invoke its full package path, and run both central and
 retained rehearsals with workspace and network resolution disabled in vendor
-mode. The retained repository builder and signed production workflow remain
-authoritative until a separately reviewed signing migration; unsigned parity
-must never manufacture signatures or key material.
+mode. The protected central workflow is the production authority; the retained
+repository builder remains an unsigned parity oracle and must never receive
+signatures or key material.
 
 Add positive and failure-path tests, update public documentation, use focused
 checks while iterating, run `make verify` once on the exact final tree, and push
