@@ -10,6 +10,7 @@
 | Architectures | amd64 and arm64 compilation through the public core API |
 | Transport | TLS 1.2+ by default; explicit plaintext only for isolated local development |
 | Service model | Caller-owned generated registrations, listeners, clients, contexts, and cleanup |
+| Release parity tool | `github.com/spice-framework/development/cmd/spice-dev` at `v0.0.0-20260806034648-1856466df09d` |
 
 [`spice-compatibility.json`](../spice-compatibility.json) is the sole preview
 compatibility boundary. The committed module selects its provisional minimum;
@@ -22,3 +23,7 @@ the repository before and after to prove source, module, and vendor immutability
 Release artifacts are produced only from an exact tagged commit under the
 contract in [`releasing.md`](releasing.md). A compromised or missing signing
 secret fails a production release; it never falls back to unsigned output.
+
+The pinned central tool renders unsigned rehearsal candidates only. Windows
+and Linux CI compare them with the retained builder under vendor-only offline
+resolution; the retained command remains the signed production authority.

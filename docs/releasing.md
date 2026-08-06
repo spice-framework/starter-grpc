@@ -59,8 +59,50 @@ go run ./cmd/starter-grpc-release \
 
 Rehearsals are always unsigned and always archive `HEAD`, never working-tree
 contents. Passing a signing key together with `-rehearsal` is rejected.
-`make verify-release` runs two rehearsals and compares every byte after the
-complete repository verification contract.
+
+## Unsigned dual-builder rehearsal
+
+The root `go.mod` authorizes the exact central renderer through a standard Go
+`tool` directive. `make release-parity` runs that fully qualified tool and the
+retained repository builder twice each with `GOWORK=off`, `GOPROXY=off`,
+`GOTOOLCHAIN=local`, and `GOFLAGS=-mod=vendor`. The central tool first emits a
+read-only plan bound to the committed module and compatibility metadata, then
+renders only to caller-owned temporary directories.
+
+The central renderer is a migration candidate. The retained repository builder
+remains both the parity oracle and the production signer:
+
+```text
+make release-parity
+```
+
+Both rehearsals are unsigned, deterministic across two independent outputs,
+and archive the exact committed `HEAD` tree beneath the identical
+`starter-grpc_VERSION/` root. Parity requires byte-identical compressed source
+archives and also fully drains and decodes both streams. It bounds compressed
+and expanded data, validates canonical gzip metadata and CRC/trailer handling,
+rejects extra gzip members, raw trailing bytes, and bytes hidden after the TAR
+end markers, and compares every entry's path, order, type, mode, link, size,
+timestamp, PAX metadata, and content hash.
+
+The SPDX documents must match exactly outside these builder-provenance fields:
+
+- document name (`Spice gRPC starter VERSION` retained and
+  `starter-grpc VERSION` centrally);
+- namespace identity, including the central `spdx/v1/` contract segment; and
+- creator organization/tool (`Spice Authors` and the retained command versus
+  `Spice Framework` and renderer/v1).
+
+Every package, external reference, relationship, creation time, and other
+decoded field must match. Each checksum file must independently and canonically
+verify its own archive and SBOM. Extra artifacts, signatures, malformed line
+endings or spacing, archive drift, and undocumented SBOM drift fail closed.
+
+`make verify-release` runs this dual-builder proof after the complete repository
+contract. The production tag workflow deliberately continues to invoke
+`cmd/starter-grpc-release`, materialize the same protected signing secret, and
+publish the same five retained artifacts until signing authority is migrated in
+a separate review.
 
 ## Consumer verification
 
