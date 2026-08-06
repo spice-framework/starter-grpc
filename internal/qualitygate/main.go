@@ -134,6 +134,14 @@ func prepareDependencies(ctx context.Context, root string) error {
 	if err := networkCommand(ctx, root, "mod", "download"); err != nil {
 		return err
 	}
+	// The product tidy graph includes test-only dependencies of gRPC packages
+	// that `go mod download` intentionally does not fetch. Check the committed
+	// module files while network resolution is explicitly allowed so Go can
+	// authenticate those dependencies against go.sum. checkModule repeats this
+	// exact read-only check with GOPROXY=off before comparing vendor contents.
+	if err := networkCommand(ctx, root, "mod", "tidy", "-diff"); err != nil {
+		return err
+	}
 	if err := networkCommand(ctx, root, "-C", "tools", "mod", "download"); err != nil {
 		return err
 	}
