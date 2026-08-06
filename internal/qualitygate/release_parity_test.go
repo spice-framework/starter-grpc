@@ -18,10 +18,13 @@ import (
 func TestValidateReleaseToolAuthorization(t *testing.T) {
 	t.Parallel()
 	valid := fmt.Sprintf(
-		`{"Require":[{"Path":%q,"Version":%q}],"Tool":[{"Path":%q}]}`,
+		`{"Require":[{"Path":%q,"Version":%q},{"Path":%q,"Version":%q}],"Tool":[{"Path":%q},{"Path":%q}]}`,
 		developmentModule,
 		developmentVersion,
+		toolchainModule,
+		toolchainVersion,
 		developmentTool,
+		toolchainTool,
 	)
 	for _, test := range []struct {
 		name    string
@@ -43,6 +46,22 @@ func TestValidateReleaseToolAuthorization(t *testing.T) {
 			name:    "missing requirement",
 			content: fmt.Sprintf(`{"Require":[],"Tool":[{"Path":%q}]}`, developmentTool),
 			wantErr: "must require " + developmentModule,
+		},
+		{
+			name: "missing verifier tool",
+			content: fmt.Sprintf(
+				`{"Require":[{"Path":%q,"Version":%q},{"Path":%q,"Version":%q}],"Tool":[{"Path":%q}]}`,
+				developmentModule, developmentVersion, toolchainModule, toolchainVersion, developmentTool,
+			),
+			wantErr: toolchainTool,
+		},
+		{
+			name: "wrong verifier version",
+			content: fmt.Sprintf(
+				`{"Require":[{"Path":%q,"Version":%q},{"Path":%q,"Version":"v0.0.0-wrong"}],"Tool":[{"Path":%q},{"Path":%q}]}`,
+				developmentModule, developmentVersion, toolchainModule, developmentTool, toolchainTool,
+			),
+			wantErr: "require exactly " + toolchainVersion,
 		},
 		{name: "malformed metadata", content: `{`, wantErr: "decode release tool authorization"},
 	} {

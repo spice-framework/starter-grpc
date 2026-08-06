@@ -10,7 +10,8 @@
 | Architectures | amd64 and arm64 compilation through the public core API |
 | Transport | TLS 1.2+ by default; explicit plaintext only for isolated local development |
 | Service model | Caller-owned generated registrations, listeners, clients, contexts, and cleanup |
-| Release parity tool | `github.com/spice-framework/development/cmd/spice-dev` at `v0.0.0-20260806034648-1856466df09d` |
+| Release signer | `github.com/spice-framework/development/cmd/spice-dev` at `v0.0.0-20260806052122-9025218a91c0` |
+| Independent verifier | `github.com/spice-framework/toolchain/cmd/spice-library-release-verify` at `v0.0.0-20260806054457-a83d9b58034c` |
 
 [`spice-compatibility.json`](../spice-compatibility.json) is the sole preview
 compatibility boundary. The committed module selects its provisional minimum;
