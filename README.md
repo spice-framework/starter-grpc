@@ -1,5 +1,7 @@
 # Spice gRPC starter
 
+Unified documentation: [spiceframework.dev/integrations/grpc](https://spiceframework.dev/integrations/grpc/).
+
 `github.com/spice-framework/starter-grpc` is the independently versioned,
 opt-in gRPC client/server integration for Spice. It wraps the official grpc-go
 runtime with explicit configuration, bounded resource use, lifecycle cleanup,
