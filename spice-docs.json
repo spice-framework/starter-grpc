@@ -1,0 +1,43 @@
+{
+  "$schema": "https://spiceframework.dev/schemas/spice-docs.schema.json",
+  "schema": 1,
+  "product": {
+    "id": "grpc",
+    "title": "gRPC",
+    "family": "integration",
+    "summary": "Opt-in gRPC integration for Spice applications with explicit server, client, transport, and lifecycle contracts.",
+    "maturity": "preview",
+    "audience": [
+      "application-developer",
+      "operator"
+    ]
+  },
+  "content": [
+    {
+      "source": "README.md",
+      "route": "index",
+      "kind": "how-to",
+      "order": 0,
+      "search": true
+    },
+    {
+      "source": "docs/**/*.md",
+      "routeFrom": "docs",
+      "order": 10,
+      "search": true
+    }
+  ],
+  "snippets": [
+    {
+      "root": ".",
+      "include": [
+        "**/*.go"
+      ],
+      "exclude": [
+        "vendor/**",
+        "internal/spicegen/**",
+        ".generated/**"
+      ]
+    }
+  ]
+}
